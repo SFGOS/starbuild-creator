@@ -1,144 +1,135 @@
-# STARBUILD Generator Tool
+# StarbuildCreator
 
-## Overview
+A simple tool for creating STARBUILD specification files with guided wizards and smart defaults.
 
-This C++ program is an interactive command-line tool designed to help users create `STARBUILD` specification files for SFG OS packages managed by `starpack`. It prompts the user for various pieces of information about one or more software packages – such as names, version, descriptions, dependencies, source files, and build scripts – and then formats this information into a `STARBUILD` file in the current directory.
+## Quick Start
 
-The tool handles both single-package and multi-package `STARBUILD` files, adjusting its prompts and output format accordingly.
+```bash
+# Build
+make
+
+# Interactive wizard (recommended)
+./StarbuildCreator
+
+# Quick mode
+./StarbuildCreator -q "myapp" "1.2.3" "My awesome application"
+
+# Use template
+./StarbuildCreator -t cpp-library
+```
 
 ## Features
 
-* Interactively prompts for all necessary `STARBUILD` fields.
-* Supports defining single or multiple packages within one `STARBUILD` file.
-* Handles multi-line input for build scripts.
-* Automatically formats dependencies, sources, and other lists into the correct `STARBUILD` array syntax.
-* Trims whitespace from user inputs.
-* Generates a ready-to-use `STARBUILD` file.
+- **Interactive Wizard**: Step-by-step guided creation
+- **Quick Mode**: One-command generation with auto-detection
+- **Template System**: Save and reuse common configurations
+- **Multiple Packages**: Support for single or multiple packages
+- **Smart Defaults**: Auto-detection of build systems and dependencies
 
-## Requirements
+## Usage Modes
 
-* A C++ compiler supporting C++11 or later (e.g., g++, clang++).
-* CMake (for building using the provided `CMakeLists.txt`).
-* Standard C++ libraries (iostream, fstream, sstream, string, vector, algorithm).
+### Interactive Wizard
+```bash
+./StarbuildCreator
+```
+Launches a guided wizard that:
+- Suggests package names based on directory
+- Auto-detects build system and dependencies
+- Generates appropriate build scripts
+- Shows preview before creating file
+
+### Quick Mode
+```bash
+./StarbuildCreator -q "package_name" "version" "description"
+```
+Creates a STARBUILD file instantly with basic defaults.
+
+### Template Mode
+```bash
+./StarbuildCreator -t template_name
+```
+Uses a saved template as starting point.
 
 ## Building
 
-This project uses CMake. To build the tool:
+```bash
+# Simple makefile
+make
 
-1.  Make sure you have CMake and a C++11 compatible compiler installed.
-2.  Create a build directory (recommended):
-    ```bash
-    mkdir build
-    cd build
-    ```
-3.  Run CMake to configure the project:
-    ```bash
-    cmake ..
-    ```
-4.  Compile the project:
-    ```bash
-    make
-    ```
-This will create an executable named `StarbuildCreator` inside the `build` directory.
+# Or with CMake
+mkdir build && cd build
+cmake ..
+make
+```
 
-*(See the `CMakeLists.txt` content in the dedicated section below).*
+## Requirements
 
-## Usage
+- GCC or compatible C compiler
+- Standard C library
+- POSIX-compliant system
 
-1.  Run the compiled executable (e.g., from the `build` directory):
-    ```bash
-    ./StarbuildCreator
-    ```
-2.  The tool will then prompt you interactively to enter information for the `STARBUILD` file. Follow the prompts carefully.
-3.  For inputs that accept multiple values (like package names or dependencies), enter them separated by commas. Leading/trailing whitespace around items will be automatically trimmed.
-4.  For script inputs (`prepare`, `compile`, `verify`, `assemble`), enter the script content line by line. To finish entering a script, type `END` on a new line by itself and press Enter.
-5.  Once all prompts are answered, the tool will create a file named `STARBUILD` in the directory *from which you ran the executable*.
+## Script Input
 
-## Input Prompts Explained
+Enter multi-line scripts line by line or paste entire scripts:
 
-* **`Enter package name(s) (comma separated):`**
-    * The primary name(s) of the package(s) this `STARBUILD` file describes.
-    * Example (single): `my-package`
-    * Example (multiple): `core-utils, shared-lib, my-app`
-* **`Enter package version:`**
-    * The version string that applies to *all* packages defined in this file.
-    * Example: `1.2.3`
-* **`Enter package description / Enter description for package "..." :`**
-    * If you entered a single package name, you'll be asked for one description.
-    * If you entered multiple package names, you'll be prompted for a description for each package individually.
-* **`Enter additional dependencies for package "..." (comma separated, or leave blank):`**
-    * This prompt appears *only* if you entered multiple package names.
-    * Allows specifying runtime dependencies specific to *that individual package*, in addition to any global dependencies. Leave blank if none.
-* **`Enter global dependencies (comma separated, or leave blank):`**
-    * Runtime dependencies required by *all* packages in this file.
-    * Example: `shared-lib, glibc`
-* **`Enter global build dependencies (comma separated, or leave blank):`**
-    * Dependencies required only during the build process (compilation, etc.) for *all* packages.
-    * Example: `gcc, make, cmake`
-* **`Enter sources (comma separated, or leave blank):`**
-    * Source files (URLs, local paths) needed to build the package(s).
-    * Example: `https://example.com/src/my-package-1.2.3.tar.gz, patchfile.patch`
-* **`Enter prepare() script (end with a line containing only END):`**
-    * Multi-line shell script commands executed to prepare the sources (e.g., extract archives, apply patches).
-* **`Enter compile() script (end with a line containing only END):`**
-    * Multi-line shell script commands executed to compile the source code (e.g., `make`, `cmake --build .`).
-* **`Enter verify() script (end with a line containing only END):`**
-    * Multi-line shell script commands executed to run tests or checks (e.g., `make check`). (Optional content)
-* **`Enter assemble() script / Enter assemble_***pkgName***() script (end with a line containing only END):`**
-    * If you defined a single package, you'll enter one `assemble()` script. This script installs the built files into a staging area.
-    * If you defined multiple packages, you'll enter an `assemble_pkgName()` script for *each* package. Each script installs files specific to that package.
+```
+Prepare script (e.g., 'cd "${srcdir}"')
+Type your script line by line:
+  1: cd "${srcdir}"
+  2: ./configure --prefix=/usr
+  3: END
+```
 
-## Output: `STARBUILD` File Format
+**Or paste entire scripts:**
 
-The tool generates a `STARBUILD` file with the following structure (syntax resembles shell variables and functions):
+## Template System
+
+Save configurations for reuse:
 
 ```bash
-# STARBUILD generated by CLI tool
+# After creating a STARBUILD file
+Save as template for future use? (y/N): y
+Template name: cpp-library
+```
 
-# --- Core Package Information ---
-package_name="pkg1" # Or: package_name=( "pkg1" "pkg2" )
+Templates are stored in `templates/` directory.
+
+## Output Example
+
+```bash
+# STARBUILD generated by StarbuildCreator
+
+package_name="myapp"
 package_version="1.2.3"
+description="My awesome application"
+license=( "GPL-3.0" "MIT" )
 
-# --- Descriptions ---
-# If single package:
-description="This is a single package description."
-# If multiple packages:
-package_descriptions=( "Description for pkg1" "Description for pkg2" )
+dependencies=( "glibc" "gcc" )
+build_dependencies=( "make" )
+sources=( )
 
-# --- Dependencies & Sources (Formatted as arrays) ---
-dependencies=( "glibc" "shared-lib" ) # Global runtime dependencies
-build_dependencies=( "gcc" "make" ) # Global build-time dependencies
-sources=( "https://example.com/pkg1-1.2.3.tar.gz" )
-
-# --- Package-Specific Dependencies (Only if multiple packages & provided) ---
-# dependencies_pkg2=( "extra-lib-for-pkg2" ) # Example
-
-# --- Build Stage Scripts ---
 prepare() {
-# User-entered prepare script lines...
-# (ends without the "END" line)
+    cd "${srcdir}"
 }
-
 compile() {
-# User-entered compile script lines...
+    make -j$(nproc)
 }
-
 verify() {
-# User-entered verify script lines...
+    make check
 }
-
-# --- Assembly Stage Scripts ---
-# If single package:
 assemble() {
-# User-entered assemble script lines...
+    make DESTDIR="${pkgdir}" install
 }
+```
 
-# If multiple packages:
-assemble_pkg1() {
-# User-entered assemble script for pkg1...
-}
+## Contributing
 
-assemble_pkg2() {
-# User-entered assemble script for pkg2...
-}
+This is a simple C program designed for easy modification. Key areas for improvement:
 
+- Add more dependency detection patterns
+- Support more build systems
+- Enhance template system
+- Add validation and error checking
+
+## License
+This software is licensed under the BSD 3 clause licence. See the LICENSE file for more information.
